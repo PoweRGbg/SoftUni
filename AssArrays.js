@@ -1,111 +1,90 @@
 function solve(input) {
-    //read number of heroes
-    let n = input.shift();
-    let heroes = {};
+    let pieces = {};
     let actions = {
-        CastSpell: (heroes, [name, mpCost, spellName]) => {
-            let hero = heroes[name];
-            mpCost = Number(mpCost);
-            if (hero.mp >= mpCost) {
-                hero.mp -= mpCost;
-                console.log(`${name} has successfully cast ${spellName} and now has ${hero.mp} MP!`);
-            }
-        },
-        TakeDamage: (heroes, [name, damage, source]) => {
-            let hero = heroes[name];
-            hero.hp -= Number(damage);
-            if (hero.hp > 0) {
-                console.log(`${name} was hit for ${damage} HP by ${source} and now has ${hero.hp} HP left!`);
+        
+        Add(pieces, name, composer, key) {
+            if(pieces[name] != undefined){
+                console.log(`${name} is already in the collection!`);
             } else {
-                console.log(`${name} has been killed by ${source}!`);
+                pieces[name] = {
+                    'composer': composer,
+                    'key': key
+                }
+                console.log(`${name} by ${composer} in ${key} added to the collection!`);
                 
             }
         },
-        Recharge: (heroes, [name, howMuch]) => {
-            let hero = heroes[name];
-            howMuch = Number(howMuch);
-            if(hero.mp + howMuch > 200){
-                howMuch = 200 - hero.mp;
+        Remove(pieces, name) {
+            if(pieces[name] != undefined){
+                delete pieces[name];
+                console.log(`Successfully removed ${name}!`);
+            } else {
+                console.log(`Invalid operation! ${name} does not exist in the collection.`);
             }
-            hero.mp += Math.min(Number(howMuch), 200);
-            console.log(`${name} recharged for ${howMuch} MP!`);
 
         },
-        Heal: (heroes, [name, howMuch]) => {
-            let hero = heroes[name];
-            howMuch = Number(howMuch);
-            if(hero.hp + howMuch > 100){
-                howMuch = 100 - hero.hp;
+        ChangeKey(pieces, name, key) {
+            if(pieces[name] != undefined){
+                pieces[name]['key'] = key;
+                console.log(`Changed the key of ${name} to ${key}!`);
+            } else {
+                console.log(`Invalid operation! ${name} does not exist in the collection.`);
             }
-            hero.hp += Math.min(Number(howMuch), 100);
-            console.log(`${name} healed for ${howMuch} HP!`);
 
         }
-    };
+    }
 
-    // parse each hero
-    for (let index = 0; index < n; index++) {
-        const element = input.shift();
-        let [name, hp, mp] = element.split(" ");
-        heroes[name] = {
-            hp: Number(hp),
-            mp: Number(mp)
+    let numberOfpieces = Number(input.shift());
+    for (let index = 0; index < numberOfpieces; index++) {
+        let [piece, composer, key] = input.shift().split("|");
+            pieces[piece] = {
+                'composer': composer,
+                'key': key
         }
 
     }
-
-    // parse and execute line until end
-    let line = input.shift();
-    while (line != "End") {
-        let [command, ...args] = line.split(" - ");
-        actions[command](heroes, args);
-
-        line = input.shift();
-    }
-
-
-
-
-    // sort heroes
-    let sorted = Object.entries(heroes)
-                        .filter(([name, {hp, mp}]) => hp > 0)
-                        .sort(compare);
-    function compare(a, b){
-        let heroA = a[1];
-        let heroB = b[1];
-        if(heroB.hp != heroA.hp){
-            return heroB.hp - heroA.hp;
-        } else {
-            return a[0].localeCompare(b[0]);
-        }
-
-    }
-    // print
     
-    for (const hero of sorted) {
-        console.log(hero[0]);
-        console.log(`  HP: ${hero[1].hp}`);
-        console.log(`  MP: ${hero[1].mp}`);
+    let line;
+    while ((line = input.shift()) != "Stop") {
+            let [command, heroName, ...params] = line.split("|");
+            actions[command](pieces, heroName, ...params);
+        }
+        
+    let sorted = Object.entries(pieces);
+    sorted.sort(compare);
+    sorted.forEach(piece => {
+        console.log(`${piece[0]} -> Composer: ${piece[1][`composer`]}, Key: ${piece[1][`key`]}`);
+    });
+
+    function compare(a, b){
+        return b[1].HP - a[1].HP || a[0].localeCompare(b[0]);
     }
 
 }
-
-// solve(['2',
-//     'Solmyr 85 120',
-//     'Kyrre 99 50',
-//     'Heal - Solmyr - 10',
-//     'Recharge - Solmyr - 50',
-//     'TakeDamage - Kyrre - 66 - Orc',
-//     'CastSpell - Kyrre - 15 - ViewEarth',
-//     'End']);
-solve(['4',
-    'Adela 90 150',
-    'SirMullich 70 40',
-    'Ivor 1 111',
-    'Tyris 94 61',
-    'Heal - SirMullich - 50',
-    'Recharge - Adela - 100',
-    'CastSpell - Tyris - 1000 - Fireball',
-    'TakeDamage - Tyris - 99 - Fireball',
-    'TakeDamage - Ivor - 3 - Mosquito',
-    'End']);
+solve([
+    '3',
+    'Fur Elise|Beethoven|A Minor',
+    'Moonlight Sonata|Beethoven|C# Minor',
+    'Clair de Lune|Debussy|C# Minor',
+    'Add|Sonata No.2|Chopin|B Minor',
+    'Add|Hungarian Rhapsody No.2|Liszt|C# Minor',
+    'Add|Fur Elise|Beethoven|C# Minor',
+    'Remove|Clair de Lune',
+    'ChangeKey|Moonlight Sonata|C# Major',
+    'Stop'
+  ] );
+  console.log("-----");
+  solve([
+    '4',
+    'Eine kleine Nachtmusik|Mozart|G Major',
+    'La Campanella|Liszt|G# Minor',
+    'The Marriage of Figaro|Mozart|G Major',
+    'Hungarian Dance No.5|Brahms|G Minor',
+    'Add|Spring|Vivaldi|E Major',
+    'Remove|The Marriage of Figaro',
+    'Remove|Turkish March',
+    'ChangeKey|Spring|C Major',
+    'Add|Nocturne|Chopin|C# Minor',
+    'Stop'
+  ]);
+  
