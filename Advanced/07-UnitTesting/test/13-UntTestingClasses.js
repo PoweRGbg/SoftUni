@@ -69,13 +69,66 @@ class PaymentPackage {
     }
 }
 const { expect } = require("chai");
-const package = new PaymentPackage('Consultation', 800);
 
 describe('Class', function () {
-    it('Name', function () {
-        expect(package.name).to.equal('Consultation');
-        expect(package.name = '').to.throw.Error('Name must be a non-empty string');
-    });
-   
+    let package = new PaymentPackage('Consultation', 800);
+    it('Wrong', function () {
 
+        expect(() => { new PaymentPackage('Some wrong package') }).to.throw();
+        expect(() => { new PaymentPackage(0, 10) }).to.throw();
+        expect(() => { new PaymentPackage('', 5) }).to.throw();
+        expect(() => { new PaymentPackage('', '5') }).to.throw();
+        expect(() => { new PaymentPackage('Wrong value', -10) }).to.throw();
+    });
+
+    package = new PaymentPackage('Consultation', 800);
+    it('Initial', function () {
+        expect(package._name).to.equal('Consultation');
+        expect(package._value).to.equal(800);
+        expect(package._active).to.equal(true);
+        expect(package._VAT).to.equal(20);
+    });
+
+
+
+    it('Name', function () {
+        package = new PaymentPackage('Consultation', 800);
+        expect(package.name).to.equal('Consultation');
+        package.name = 'Pesho';
+        expect(package.name).to.equal('Pesho');
+        expect(() => { package.name = '' }).to.throw('Name must be a non-empty string');
+        expect(() => { package.name = 0 }).to.throw('Name must be a non-empty string');
+    });
+    it('Value', function () {
+        package = new PaymentPackage('Consultation', 800);
+        expect(package.value).to.equal(800);
+        package.value = 0;
+        expect(package.value).to.equal(0);
+        expect(() => { package.value = '' }).to.throw('Value must be a non-negative number');
+        expect(() => { package.value = -5 }).to.throw('Value must be a non-negative number');
+        
+    });
+    it('VAT', function () {
+        package = new PaymentPackage('Consultation', 800);
+        expect(package.VAT).to.equal(20);
+        package.VAT = 0
+        expect(package.VAT).to.equal(0);
+        expect(() => { package.VAT = '' }).to.throw('VAT must be a non-negative number');
+        expect(() => { package.VAT = -5 }).to.throw('VAT must be a non-negative number');
+        
+    });
+    it('Active', function () {
+        package = new PaymentPackage('Consultation', 800);
+        expect(package.active).to.equal(true);
+        package.active = false;
+        expect(package.active).to.equal(false);
+        expect(() => { package.active = '' }).to.throw('Active status must be a boolean');
+
+    });
+    it('toString()', function () {
+        const newPackage = new PaymentPackage('Consultation', 800);
+        expect(newPackage.toString()).to.equal(`Package: Consultation\n- Value (excl. VAT): 800\n- Value (VAT 20%): 960`);
+        newPackage.active = false;
+        expect(newPackage.toString()).to.equal(`Package: Consultation (inactive)\n- Value (excl. VAT): 800\n- Value (VAT 20%): 960`);
+    });
 });
