@@ -1,6 +1,18 @@
+import { showPost, setupPost, addComment } from './post.js';
+
+const newTopicDiv = document.querySelector('.container .new-topic-border');
 // get form
 let form = document.querySelector('.container form');
+let topics = document.querySelector('.topic-title');
 let cancelBtn = document.querySelector('.container form .cancel');
+
+setupPost(topics, '');
+window.addEventListener("load", async function () {
+    // load posts from database
+    let posts = await getPosts();
+    renderPosts(posts);
+});
+
 cancelBtn.addEventListener('click', (event) => {
     event.preventDefault();
     console.log(event.target.className);
@@ -47,8 +59,37 @@ form.addEventListener('submit', async (event) => {
         alert(`All fields are required!`);
     }
 });
-console.log();
-//get buttons
+
+// redirect to topic on click
+topics.addEventListener('click', async (event) => {
+    event.preventDefault();
+
+    if (event.target.tagName == 'H2') {
+        // hide newTopic
+        newTopicDiv.style.display = 'none';
+        let id = event.target.parentNode.querySelector('input').value;
+        showPost(id);
+    } else if (event.target.tagName == 'BUTTON') {
+        // get gorm data
+        let commentForm = document.querySelector('.answer-comment form');
+        // check if all fields are valid
+        let formData = new FormData(commentForm);
+        let postText = formData.get('postText');
+        let username = formData.get('username');
+        let postId = formData.get('postId');
+        let id = postId; // needed for showPost()
+        let date = new Date();
+
+        if ( postText != '' && username != ''){
+            let newComment = {username, postText, date, postId};
+            let result = await addComment(newComment);
+            // console.log(result);
+        }
+        // post new comment
+        showPost(id);
+    }
+});
+
 function clearFields() {
     let former = document.querySelector('.container form');
     let fields = former.querySelectorAll('input');
@@ -58,6 +99,7 @@ function clearFields() {
     });
     textArea.value = '';
 }
+
 async function addPost(postData) {
     // const token = sessionStorage.getItem('userToken');
     const result = await request('http://localhost:3030/jsonstore/collections/myboard/posts', {
@@ -71,7 +113,6 @@ async function addPost(postData) {
     return result;
 }
 
-
 async function getPosts(postData) {
     // const token = sessionStorage.getItem('userToken');
     const result = await request('http://localhost:3030/jsonstore/collections/myboard/posts', {
@@ -84,10 +125,9 @@ async function getPosts(postData) {
 function renderPosts(posts) {
     let container = document.querySelector('.topic-title');
     // clear page contents
-    container.innerHTML = '';
+    // container.innerHTML = '';
     // render all posts
     Object.keys(posts).forEach(post => {
-        console.log(posts[post]);
         /*
         postText: "asd"
         topicName: "asd"
@@ -101,6 +141,7 @@ function renderPosts(posts) {
             <div class="topic-name">
                 <a href="#" class="normal">
                     <h2>${posts[post].topicName}</h2>
+                    <input type="hidden" name="id" value="${posts[post]._id}">
                 </a>
                 <div class="columns">
                     <div>
@@ -120,6 +161,7 @@ function renderPosts(posts) {
         container.innerHTML += postHTML;
     });
 }
+
 async function request(url, options) {
     const response = await fetch(url, options);
     if (response.ok == false) {
